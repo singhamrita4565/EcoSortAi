@@ -35,15 +35,15 @@ RUNS_OUTPUT = (
 # TRAINING SETTINGS
 # ============================================================
 
-MODEL_NAME = "yolo26n.pt"
+MODEL_NAME = "yolo11n.pt"   # YOLOv11 nano — auto-downloaded on first run
 
-EPOCHS = 50
+EPOCHS = 30          # fast run — increase to 100 later for better accuracy
 
 IMAGE_SIZE = 640
 
-BATCH_SIZE = 8
+BATCH_SIZE = 8       # safe for most CPUs/GPUs
 
-PATIENCE = 15
+PATIENCE = 10
 
 WORKERS = 0
 
@@ -144,6 +144,8 @@ def main():
         project=str(RUNS_OUTPUT),
 
         name="ecosort_yolo",
+
+        exist_ok=True,
 
         pretrained=True,
 

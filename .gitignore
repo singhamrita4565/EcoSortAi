@@ -1,47 +1,63 @@
-# Python
-.venv/
-.venv313/
-venv/
-env/
+
+---
+
+### 2. 📄 `.gitignore` Content
+
+```gitignore
+# ============================================================
+# Python & Virtual Environments
+# ============================================================
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+venv/
+.venv/
+env/
+ENV/
 
-# Python environment / IDE
-.vscode/
-.idea/
-.ipynb_checkpoints/
-
-# Backend generated files
-backend/uploads/
-backend/ecosort.db
-backend/*.db
+# ============================================================
+# Database & Backend Temp Uploads
+# ============================================================
+*.db
 *.sqlite
 *.sqlite3
-*.log
+backend/ecosort.db
+backend/temp_uploads/
 
-# AI model weights
-*.pt
-*.pth
-*.onnx
+# ============================================================
+# Datasets & Training Runs (Large Files)
+# ============================================================
+datasets/raw/
+datasets/processed/
+runs/
+*.cache
 
-# Node / React
+# ============================================================
+# Node / Frontend Build
+# ============================================================
 node_modules/
 frontend/node_modules/
-dist/
-build/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Environment files
+# ============================================================
+# Environment & IDE Files
+# ============================================================
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# OS files
+# ============================================================
+# OS Generated Files
+# ============================================================
 .DS_Store
 Thumbs.db
-
-# =========================
-# EcoSort AI datasets
-# =========================
-datasets/
-# Training runs
-runs/
+Desktop.ini
