@@ -18,6 +18,11 @@ function Sidebar() {
       icon: "🕘",
     },
     {
+      name: "Waste Map",
+      path: "/map",
+      icon: "🗺️",
+    },
+    {
       name: "Environmental Impact",
       path: "/impact",
       icon: "🌱",

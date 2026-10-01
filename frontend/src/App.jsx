@@ -4,6 +4,7 @@ import Dashboard from "./pages/Dashboard";
 import ScanWaste from "./pages/ScanWaste";
 import Result from "./pages/Result";
 import History from "./pages/History";
+import WasteMapPage from "./pages/WasteMapPage";
 import Impact from "./pages/Impact";
 import Chatbot from "./pages/Chatbot";
 import Profile from "./pages/Profile";
@@ -89,6 +90,15 @@ function App() {
   element={
     <ProtectedRoute>
       <History />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/map"
+  element={
+    <ProtectedRoute>
+      <WasteMapPage />
     </ProtectedRoute>
   }
 />

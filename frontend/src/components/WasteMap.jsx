@@ -3,14 +3,23 @@ import {
   getGisCenters,
   getGarbageHotspots,
   reportGarbageHotspot,
+  takeMunicipalAction,
+  getReverseGeocode
 } from "../services/api";
 
-function WasteMap() {
+function WasteMap({ initialLocation }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef  = useRef(null);
   const layerGroupRef   = useRef(null);
 
-  const [userCoords, setUserCoords] = useState({ lat: 28.6139, lng: 77.2090 });
+  const [userCoords, setUserCoords] = useState({
+    lat: initialLocation?.lat || 28.6139,
+    lng: initialLocation?.lng || 77.2090,
+  });
+  const [cityName, setCityName]     = useState(initialLocation?.city || "");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searching, setSearching]   = useState(false);
+
   const [centers, setCenters]       = useState([]);
   const [hotspots, setHotspots]     = useState([]);
   const [activeFilter, setActiveFilter] = useState("ALL");
@@ -23,11 +32,18 @@ function WasteMap() {
   const [reportMsg, setReportMsg]     = useState("");
   const [submitting, setSubmitting]   = useState(false);
 
+  useEffect(() => {
+    if (initialLocation?.lat && initialLocation?.lng) {
+      setUserCoords({ lat: initialLocation.lat, lng: initialLocation.lng });
+      if (initialLocation.city) setCityName(initialLocation.city);
+    }
+  }, [initialLocation]);
+
   // 1. Fetch GIS Centers & Garbage Hotspots
-  const loadMapData = async (lat, lng) => {
+  const loadMapData = async (lat, lng, city = "") => {
     try {
       const [centersRes, hotspotsRes] = await Promise.all([
-        getGisCenters(lat, lng),
+        getGisCenters(lat, lng, "", city),
         getGarbageHotspots(lat, lng),
       ]);
       if (centersRes.status === "success") {
@@ -42,8 +58,60 @@ function WasteMap() {
   };
 
   useEffect(() => {
-    loadMapData(userCoords.lat, userCoords.lng);
-  }, [userCoords.lat, userCoords.lng]);
+    loadMapData(userCoords.lat, userCoords.lng, cityName);
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([userCoords.lat, userCoords.lng], 13);
+    }
+  }, [userCoords.lat, userCoords.lng, cityName]);
+
+  // Search location by city or landmark name
+  const handleLocationSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    try {
+      setSearching(true);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`
+      );
+      if (res.ok) {
+        const results = await res.json();
+        if (results && results.length > 0) {
+          const top = results[0];
+          const newLat = parseFloat(top.lat);
+          const newLng = parseFloat(top.lon);
+          const nameParts = top.display_name.split(",");
+          const mainCity = nameParts[0] || searchQuery;
+
+          const newLoc = {
+            lat: newLat,
+            lng: newLng,
+            city: mainCity,
+            displayName: top.display_name,
+            source: "Search"
+          };
+
+          setUserCoords({ lat: newLat, lng: newLng });
+          setCityName(mainCity);
+          saveUserLocation(newLoc);
+
+          if (mapInstanceRef.current) {
+            if (mapInstanceRef.current.flyTo) {
+              mapInstanceRef.current.flyTo([newLat, newLng], 13, { duration: 1.2 });
+            } else {
+              mapInstanceRef.current.setView([newLat, newLng], 13);
+            }
+          }
+        } else {
+          alert(`No locations found for "${searchQuery}". Please try another city.`);
+        }
+      }
+    } catch (err) {
+      alert("Location search error: " + err.message);
+    } finally {
+      setSearching(false);
+    }
+  };
 
   // 2. Initialize Leaflet + OpenStreetMap
   useEffect(() => {
@@ -264,6 +332,7 @@ function WasteMap() {
     <div style={{ marginTop: "30px" }}>
       {/* MAP HEADER & CONTROLS */}
       <div className="impact-panel" style={{ marginBottom: "24px" }}>
+        {/* LOCATION SEARCH BAR & GPS BTN */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
           <div>
             <span className="small-label">LEAFLET + OPENSTREETMAP GIS</span>
@@ -275,14 +344,40 @@ function WasteMap() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleLocateMe}
-            className="primary-btn"
-            style={{ padding: "9px 16px", fontSize: "13px" }}
-          >
-            📍 Use My Live GPS
-          </button>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <form onSubmit={handleLocationSearch} style={{ display: "flex", gap: "6px" }}>
+              <input
+                type="text"
+                placeholder="Search city / area (e.g. Paris, New York)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid #cfe0d2",
+                  fontSize: "12px",
+                  minWidth: "220px",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={searching}
+                className="secondary-btn"
+                style={{ padding: "8px 14px", fontSize: "12px" }}
+              >
+                {searching ? "Searching..." : "🔍 Search"}
+              </button>
+            </form>
+
+            <button
+              type="button"
+              onClick={handleLocateMe}
+              className="primary-btn"
+              style={{ padding: "8px 14px", fontSize: "12px" }}
+            >
+              📍 Use My GPS
+            </button>
+          </div>
         </div>
 
         {/* FILTER BAR */}
@@ -399,132 +494,76 @@ function WasteMap() {
                   <div style={{ marginTop: "6px", fontSize: "11px", fontWeight: "600", color: badgeColor }}>
                     🚨 Status: {h.status}
                   </div>
+
+                  {/* MUNICIPAL ACTION BUTTONS */}
+                  <div style={{ marginTop: "10px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await takeMunicipalAction(h.id, "dispatch_truck");
+                        loadMapData(userCoords.lat, userCoords.lng, cityName);
+                      }}
+                      style={{
+                        padding: "4px 8px",
+                        fontSize: "10px",
+                        borderRadius: "6px",
+                        border: "1px solid #bbdefb",
+                        background: "#e3f2fd",
+                        color: "#1565c0",
+                        cursor: "pointer",
+                        fontWeight: "600"
+                      }}
+                    >
+                      🚚 Dispatch Truck
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await takeMunicipalAction(h.id, "install_bin");
+                        loadMapData(userCoords.lat, userCoords.lng, cityName);
+                      }}
+                      style={{
+                        padding: "4px 8px",
+                        fontSize: "10px",
+                        borderRadius: "6px",
+                        border: "1px solid #c8e6c9",
+                        background: "#e8f5e9",
+                        color: "#2e7d32",
+                        cursor: "pointer",
+                        fontWeight: "600"
+                      }}
+                    >
+                      🗑️ Request Smart Bin
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await takeMunicipalAction(h.id, "mark_cleaned");
+                        loadMapData(userCoords.lat, userCoords.lng, cityName);
+                      }}
+                      style={{
+                        padding: "4px 8px",
+                        fontSize: "10px",
+                        borderRadius: "6px",
+                        border: "1px solid #d1c4e9",
+                        background: "#f3e5f5",
+                        color: "#6a1b9a",
+                        cursor: "pointer",
+                        fontWeight: "600"
+                      }}
+                    >
+                      ✅ Mark Cleaned
+                    </button>
+                  </div>
                 </div>
               );
             })}
           </div>
-        </div>
-
-        {/* RIGHT: REPORT GARBAGE ACCUMULATION FORM */}
-        <div className="impact-panel">
-          <h3>📢 Report Garbage Accumulation</h3>
-          <p style={{ fontSize: "13px", color: "#5f7066", marginBottom: "16px" }}>
-            Spot overflowing bins or repeated illegal dumping? Plot it on the OpenStreetMap to alert municipal cleanup teams.
-          </p>
-
-          <form onSubmit={handleReportSubmit} style={{ display: "grid", gap: "14px" }}>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: "600", marginBottom: "5px", color: "#173f2c" }}>
-                Area / Landmark Name *
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., Sector 4 Bus Stand or Old Market Corner"
-                value={areaName}
-                onChange={(e) => setAreaName(e.target.value)}
-                required
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid #cfe0d2",
-                  fontSize: "13px",
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: "600", marginBottom: "5px", color: "#173f2c" }}>
-                Primary Waste Type
-              </label>
-              <select
-                value={wasteType}
-                onChange={(e) => setWasteType(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid #cfe0d2",
-                  fontSize: "13px",
-                  background: "#fff",
-                }}
-              >
-                <option value="Plastic & Mixed Packaging">Plastic &amp; Mixed Packaging</option>
-                <option value="Overflowing Public Dustbin">Overflowing Public Dustbin</option>
-                <option value="Organic & Food Waste">Organic &amp; Food Waste</option>
-                <option value="E-Waste & Hazardous Scrap">E-Waste &amp; Hazardous Scrap</option>
-                <option value="Glass & Metal Litter">Glass &amp; Metal Litter</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: "600", marginBottom: "5px", color: "#173f2c" }}>
-                Map Coordinates (Click map to pin exact spot)
-              </label>
-              <input
-                type="text"
-                readOnly
-                value={
-                  clickedCoords
-                    ? `Pinned: ${clickedCoords.lat}, ${clickedCoords.lng}`
-                    : `Default Area: ${userCoords.lat.toFixed(4)}, ${userCoords.lng.toFixed(4)} (Click map to change)`
-                }
-                style={{
-                  width: "100%",
-                  padding: "9px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid #e0eae2",
-                  background: "#f4f8f4",
-                  fontSize: "12px",
-                  color: "#4a5d50",
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: "600", marginBottom: "5px", color: "#173f2c" }}>
-                Details / Observation
-              </label>
-              <textarea
-                rows={3}
-                placeholder="Describe the garbage accumulation issue..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid #cfe0d2",
-                  fontSize: "13px",
-                  resize: "vertical",
-                }}
-              />
-            </div>
-
-            {reportMsg && (
-              <div
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: "8px",
-                  background: "#e8f5e9",
-                  color: "#1b5e20",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                }}
-              >
-                ✅ {reportMsg}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="primary-btn"
-              disabled={submitting}
-              style={{ padding: "11px 18px", fontSize: "13px", cursor: "pointer" }}
-            >
-              {submitting ? "Plotting on Map..." : "🔥 Plot Garbage Report on Map"}
-            </button>
-          </form>
         </div>
 
       </div>

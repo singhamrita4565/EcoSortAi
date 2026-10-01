@@ -184,8 +184,86 @@ def _analyze_image_features(image_path: Path) -> str:
 # PREDICT FUNCTION
 # ============================================================
 
+# ============================================================
+# IMAGE PREPROCESSING FOR MEDIUM LIGHTING & CONTAMINATION
+# ============================================================
+
+from PIL import ImageEnhance, ImageOps
+
+def preprocess_image_lighting(image_path: Path) -> Image.Image:
+    """Preprocess image to boost contrast, auto-level exposure, and brighten medium/dim lighting photos."""
+    try:
+        with Image.open(image_path) as img:
+            img = img.convert("RGB")
+            # Auto-contrast & brightness normalization
+            img = ImageOps.autocontrast(img, cutoff=2)
+            enhancer = ImageEnhance.Brightness(img)
+            img = enhancer.enhance(1.15)
+            sharpener = ImageEnhance.Sharpness(img)
+            img = sharpener.enhance(1.2)
+            return img
+    except Exception as e:
+        print(f"⚠️ Image preprocessing notice: {e}")
+        return Image.open(image_path).convert("RGB") if image_path.exists() else None
+
+
+def analyze_contamination(img: Image.Image, bbox: list) -> dict:
+    """
+    Analyzes item bounding box pixels for dirt, grease, stains, or organic food soil.
+    Returns contamination rating and cleaning instruction.
+    """
+    try:
+        w, h = img.size
+        x1 = max(0, int(bbox[0]))
+        y1 = max(0, int(bbox[1]))
+        x2 = min(w, int(bbox[2]))
+        y2 = min(h, int(bbox[3]))
+
+        if (x2 - x1) > 10 and (y2 - y1) > 10:
+            crop = img.crop((x1, y1, x2, y2)).resize((60, 60))
+            pixels = list(crop.getdata())
+            total = len(pixels)
+
+            # Detect dark spots (grease/dirt) and high color variance (food soil)
+            dark_pixels = sum(1 for p in pixels if (p[0] + p[1] + p[2]) / 3 < 65)
+            dark_ratio = dark_pixels / total
+
+            # Red/Yellow organic stain check (food sauce, coffee, pizza grease)
+            stain_pixels = sum(1 for p in pixels if p[0] > 140 and p[1] < 120 and p[2] < 90)
+            stain_ratio = stain_pixels / total
+
+            if dark_ratio > 0.35 or stain_ratio > 0.20:
+                return {
+                    "status": "Contaminated ⚠️",
+                    "level": "High Soil / Food Grease",
+                    "instruction": "Heavy food/grease contamination detected. Tear off clean parts for recycling or divert to Organics/Landfill.",
+                    "is_clean": False
+                }
+            elif dark_ratio > 0.18 or stain_ratio > 0.08:
+                return {
+                    "status": "Slightly Soiled 🧽",
+                    "level": "Mild Residue",
+                    "instruction": "Mild residue detected. Quick 5-second rinse with water before placing in Recycling Bin!",
+                    "is_clean": True
+                }
+
+    except Exception:
+        pass
+
+    return {
+        "status": "Clean & Dry ✨",
+        "level": "Clean",
+        "instruction": "Item is clean and approved for standard recycling!",
+        "is_clean": True
+    }
+
+
+# ============================================================
+# PREDICT FUNCTION (MULTI-OBJECT DETECTION & OVERLAYS)
+# ============================================================
+
 def predict(image_path) -> list:
-    """Run YOLO inference + visual analysis and return structured waste detections."""
+    """Run YOLO inference with multi-object detection and image lighting normalization."""
     image_path = Path(image_path)
 
     if not image_path.exists():
@@ -197,13 +275,23 @@ def predict(image_path) -> list:
             "class_name": fallback_class,
             "confidence": 0.88,
             "bbox"      : [50.0, 50.0, 590.0, 590.0],
+            "contamination": {
+                "status": "Clean & Dry ✨",
+                "level": "Clean",
+                "instruction": "Item is clean and approved for recycling!",
+                "is_clean": True
+            }
         }]
+
+    # Preprocess image lighting for dim/medium light photos
+    pil_img = preprocess_image_lighting(image_path)
+    img_w, img_h = pil_img.size if pil_img else (640, 640)
 
     model, loaded_path = _load_model()
     is_coco_model = (len(model.names) == 80)
 
     results = model.predict(
-        source=str(image_path),
+        source=pil_img if pil_img else str(image_path),
         imgsz=IMAGE_SIZE,
         conf=CONFIDENCE_THRESHOLD,
         iou=IOU_THRESHOLD,
@@ -234,42 +322,48 @@ def predict(image_path) -> list:
                 display_id  = class_id
 
             x1, y1, x2, y2 = box.xyxy[0].tolist()
+            bbox = [round(x1, 1), round(y1, 1), round(x2, 1), round(y2, 1)]
+
+            contamination_info = analyze_contamination(pil_img, bbox) if pil_img else {
+                "status": "Clean & Dry ✨", "level": "Clean", "instruction": "Item approved for recycling!", "is_clean": True
+            }
 
             detections.append({
-                "class_id"  : display_id,
-                "class_name": waste_class,
-                "confidence": round(confidence, 4),
-                "bbox"      : [
-                    round(x1, 1), round(y1, 1),
-                    round(x2, 1), round(y2, 1)
-                ],
+                "class_id"     : display_id,
+                "class_name"   : waste_class,
+                "confidence"   : round(confidence, 4),
+                "bbox"         : bbox,
+                "img_dimensions": [img_w, img_h],
+                "contamination": contamination_info
             })
 
     # Sort by confidence descending
     detections.sort(key=lambda d: d["confidence"], reverse=True)
 
-    # Deduplicate: Keep top detection per waste class
-    seen = set()
-    unique = []
-    for d in detections:
-        if d["class_name"] not in seen:
-            seen.add(d["class_name"])
-            unique.append(d)
+    # Multi-object detection: Keep up to 6 distinct detected waste items in photo
+    multi_detections = detections[:6]
 
     # Fallback if no specific detection was triggered
-    if not unique:
+    if not multi_detections:
         fallback_class = _analyze_image_features(image_path)
         fallback_id    = list(CUSTOM_CLASS_NAMES.values()).index(fallback_class) \
                          if fallback_class in CUSTOM_CLASS_NAMES.values() else 0
 
-        unique.append({
-            "class_id"  : fallback_id,
-            "class_name": fallback_class,
-            "confidence": 0.85,
-            "bbox"      : [50.0, 50.0, 590.0, 590.0],
+        multi_detections.append({
+            "class_id"     : fallback_id,
+            "class_name"   : fallback_class,
+            "confidence"   : 0.85,
+            "bbox"         : [50.0, 50.0, float(img_w - 50), float(img_h - 50)],
+            "img_dimensions": [img_w, img_h],
+            "contamination": {
+                "status": "Clean & Dry ✨",
+                "level": "Clean",
+                "instruction": "Item approved for recycling!",
+                "is_clean": True
+            }
         })
 
-    return unique
+    return multi_detections
 
 
 # ============================================================
