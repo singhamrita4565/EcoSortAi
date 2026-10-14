@@ -86,15 +86,6 @@ function App() {
 />
 
 <Route
-  path="/history"
-  element={
-    <ProtectedRoute>
-      <History />
-    </ProtectedRoute>
-  }
-/>
-
-<Route
   path="/map"
   element={
     <ProtectedRoute>
@@ -117,6 +108,15 @@ function App() {
   element={
     <ProtectedRoute>
       <Chatbot />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/history"
+  element={
+    <ProtectedRoute>
+      <History />
     </ProtectedRoute>
   }
 />

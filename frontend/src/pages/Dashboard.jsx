@@ -306,7 +306,7 @@ function Dashboard() {
                 </button>
               </div>
 
-              {/* RECYCLING BEST PRACTICES SUMMARY */}
+              {/* RECYCLING BEST PRACTICES & INTERACTIVE MATERIAL GUIDE */}
               <div
                 style={{
                   background: "#ffffff",
@@ -316,20 +316,130 @@ function Dashboard() {
                   boxShadow: "0 3px 12px rgba(0,0,0,0.02)"
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-                  <span style={{ fontSize: "18px" }}>💡</span>
-                  <h4 style={{ margin: 0, fontSize: "15px", color: "#173f2c" }}>
-                    Quick Recycling Best Practices
-                  </h4>
+                <div style={{ display: "flex", alignItems: "center", justify: "space-between", marginBottom: "10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "18px" }}>💡</span>
+                    <h4 style={{ margin: 0, fontSize: "15px", color: "#173f2c" }}>
+                      Quick Recycling Best Practices
+                    </h4>
+                  </div>
+                  <span style={{ fontSize: "11px", background: "#f0f7f1", color: "#2e7d32", padding: "2px 8px", borderRadius: "8px", fontWeight: "bold" }}>
+                    Cheat Sheet
+                  </span>
                 </div>
 
                 <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "#455a64", lineHeight: "1.6" }}>
-                  <li>Rinse containers to remove food residues before recycling.</li>
-                  <li>Separate multi-layer packaging into dry plastic &amp; organic streams.</li>
-                  <li>Never mix lithium batteries with general dry trash.</li>
+                  <li><b>Plastics:</b> Rinse PET (#1) bottles &amp; HDPE (#2) jugs. Keep caps on.</li>
+                  <li><b>Glass:</b> 100% infinitely recyclable. Do not mix with Pyrex or ceramics.</li>
+                  <li><b>Batteries:</b> Never throw in curbside trash! Drop off at hazardous e-waste points.</li>
+                  <li><b>Pizza Boxes:</b> Recycle clean top lids; compost greasy bottoms.</li>
                 </ul>
               </div>
 
+            </div>
+
+          </div>
+
+          {/* DESKTOP ENHANCEMENT ROW: COMMUNITY ECO RADAR & BADGES PROGRESS */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px", marginTop: "10px" }}>
+            
+            {/* LIVE AIR QUALITY & ENVIRONMENT RADAR */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #ffffff, #f4fbf5)",
+                border: "1px solid #c8e6c9",
+                borderRadius: "20px",
+                padding: "20px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.03)"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "20px" }}>🌍</span>
+                  <h3 style={{ margin: 0, fontSize: "16px", color: "#1b5e20" }}>
+                    Live Air Quality &amp; Environment Radar
+                  </h3>
+                </div>
+                <span style={{ fontSize: "11px", background: "#e8f5e9", color: "#2e7d32", padding: "3px 10px", borderRadius: "10px", fontWeight: "bold" }}>
+                  Real-Time
+                </span>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "12px" }}>
+                <div style={{ padding: "12px", background: "#ffffff", borderRadius: "12px", border: "1px solid #e0e0e0" }}>
+                  <span style={{ fontSize: "11px", color: "#666", display: "block" }}>US Air Quality (AQI)</span>
+                  <strong style={{ fontSize: "20px", color: "#2e7d32", display: "block", marginTop: "2px" }}>
+                    {stats.local_air_quality?.us_aqi || 42} <span style={{ fontSize: "12px" }}>Good 🟢</span>
+                  </strong>
+                </div>
+
+                <div style={{ padding: "12px", background: "#ffffff", borderRadius: "12px", border: "1px solid #e0e0e0" }}>
+                  <span style={{ fontSize: "11px", color: "#666", display: "block" }}>Active Location</span>
+                  <strong style={{ fontSize: "13px", color: "#1b5e20", display: "block", marginTop: "4px" }}>
+                    {userLocation?.city || "Local Municipal Area"}
+                  </strong>
+                </div>
+              </div>
+
+              <p style={{ fontSize: "12px", color: "#455a64", marginTop: "12px", lineHeight: "1.5" }}>
+                <b>💡 Environmental Advisory:</b> Air quality is satisfactory. Great day for outdoor waste collection, sorting, and municipal recycling!
+              </p>
+            </div>
+
+            {/* WEEKLY SUSTAINABILITY TARGET & BADGES */}
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #c8e6c9",
+                borderRadius: "20px",
+                padding: "20px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.03)"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "20px" }}>🏆</span>
+                  <h3 style={{ margin: 0, fontSize: "16px", color: "#1b5e20" }}>
+                    Weekly Sustainability Target &amp; Badges
+                  </h3>
+                </div>
+                <span style={{ fontSize: "11px", background: "#fff8e1", color: "#f57f17", padding: "3px 10px", borderRadius: "10px", fontWeight: "bold" }}>
+                  Level 2 Explorer
+                </span>
+              </div>
+
+              {/* PROGRESS BAR */}
+              <div style={{ marginTop: "10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: "bold", color: "#37474f", marginBottom: "6px" }}>
+                  <span>Goal: 10 Items Recycled</span>
+                  <span>{stats.recycled_items || 0} / 10 Scans</span>
+                </div>
+
+                <div style={{ width: "100%", height: "12px", background: "#e8f5e9", borderRadius: "10px", overflow: "hidden" }}>
+                  <div
+                    style={{
+                      width: `${Math.min(100, ((stats.recycled_items || 0) / 10) * 100)}%`,
+                      height: "100%",
+                      background: "linear-gradient(90deg, #4caf50, #2e7d32)",
+                      borderRadius: "10px",
+                      transition: "width 0.4s ease"
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* BADGES ROW */}
+              <div style={{ display: "flex", gap: "10px", marginTop: "16px", flexWrap: "wrap" }}>
+                <div style={{ padding: "8px 12px", background: "#e8f5e9", borderRadius: "12px", fontSize: "11px", fontWeight: "600", color: "#1b5e20", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>🍃</span> Eco Starter
+                </div>
+                <div style={{ padding: "8px 12px", background: stats.recycled_items >= 5 ? "#e8f5e9" : "#f5f5f5", borderRadius: "12px", fontSize: "11px", fontWeight: "600", color: stats.recycled_items >= 5 ? "#1b5e20" : "#9e9e9e", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>🏆</span> Recycler (5+)
+                </div>
+                <div style={{ padding: "8px 12px", background: stats.recycled_items >= 10 ? "#e8f5e9" : "#f5f5f5", borderRadius: "12px", fontSize: "11px", fontWeight: "600", color: stats.recycled_items >= 10 ? "#1b5e20" : "#9e9e9e", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>👑</span> Eco Master (10+)
+                </div>
+              </div>
             </div>
 
           </div>

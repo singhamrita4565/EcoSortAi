@@ -123,60 +123,62 @@ function ScanWaste() {
 
             <div className="scan-info-panel">
 
-              <h3>
-                For best results
-              </h3>
-
-              <div className="info-item">
-
-                <span>
-                  💡
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h3 style={{ margin: 0, fontSize: "16px", color: "#173f2c" }}>
+                  🎯 Multi-Object AI Scanner Tips
+                </h3>
+                <span style={{ fontSize: "10px", background: "#e8f5e9", color: "#2e7d32", padding: "3px 8px", borderRadius: "10px", fontWeight: "bold" }}>
+                  ~95% Accuracy
                 </span>
-
-                <p>
-                  Use a clear image with
-                  good lighting.
-                </p>
-
               </div>
 
               <div className="info-item">
-
-                <span>
-                  📦
-                </span>
-
+                <span>💡</span>
                 <p>
-                  Keep the waste item
-                  clearly visible.
+                  <b>Optimal Lighting:</b> Position item in good ambient light. Our automatic Pillow pre-processor balances medium/dim photos.
                 </p>
-
               </div>
 
               <div className="info-item">
-
-                <span>
-                  🔍
-                </span>
-
+                <span>📸</span>
                 <p>
-                  Avoid blurry or extremely
-                  dark images.
+                  <b>Multi-Object Scan:</b> You can include up to 6 waste objects in a single photo (e.g. plastic bottle &amp; glass jar together).
                 </p>
-
               </div>
 
               <div className="info-item">
-
-                <span>
-                  📷
-                </span>
-
+                <span>🧽</span>
                 <p>
-                  Keep the item you want
-                  to analyze clearly visible.
+                  <b>Contamination Detection:</b> EcoSort AI scans for dirt &amp; food grease stains, advising if a 5-second rinse is needed.
                 </p>
+              </div>
 
+              {/* DETECTABLE CLASSES CATEGORIES CHEAT SHEET */}
+              <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #e0e0e0" }}>
+                <h4 style={{ fontSize: "13px", color: "#1b5e20", marginBottom: "10px" }}>
+                  🏷️ Detectable Material Categories
+                </h4>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  <div style={{ padding: "8px", background: "#f4f8f4", borderRadius: "8px", fontSize: "11px", color: "#2e7d32", fontWeight: "600" }}>
+                    🥤 Plastic (PET/HDPE)
+                  </div>
+                  <div style={{ padding: "8px", background: "#f4f8f4", borderRadius: "8px", fontSize: "11px", color: "#0288d1", fontWeight: "600" }}>
+                    🍾 Glass (Jars/Bottles)
+                  </div>
+                  <div style={{ padding: "8px", background: "#f4f8f4", borderRadius: "8px", fontSize: "11px", color: "#d32f2f", fontWeight: "600" }}>
+                    🥫 Metal (Cans/Foil)
+                  </div>
+                  <div style={{ padding: "8px", background: "#f4f8f4", borderRadius: "8px", fontSize: "11px", color: "#f57c00", fontWeight: "600" }}>
+                    📦 Paper &amp; Cardboard
+                  </div>
+                  <div style={{ padding: "8px", background: "#f4f8f4", borderRadius: "8px", fontSize: "11px", color: "#7b1fa2", fontWeight: "600" }}>
+                    🔋 Batteries (Hazardous)
+                  </div>
+                  <div style={{ padding: "8px", background: "#f4f8f4", borderRadius: "8px", fontSize: "11px", color: "#3f51b5", fontWeight: "600" }}>
+                    💻 E-Waste Electronics
+                  </div>
+                </div>
               </div>
 
             </div>

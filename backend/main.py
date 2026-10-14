@@ -902,82 +902,98 @@ def generate_conversational_ai_response(msg: str, lat: float, lng: float, city: 
             )
             return reply, True, search_res.get("source_url")
 
-    # 4. Item Specific Disposal & Waste Analytics
-    if any(k in msg_clean for k in ["plastic", "bottle", "jug", "container", "cup", "pouch", "bag"]):
+    # 4. Item Specific Disposal & Waste Analytics (Specific materials evaluated BEFORE plastic fallbacks)
+    
+    # BATTERIES & HAZARDOUS WASTE
+    if any(k in msg_clean for k in ["battery", "batteries", "lithium", "cell", "accumulator", "powerbank"]):
         reply = (
-            f"🥤 **Plastic Item Waste & Recycling Guide ({loc})**\n\n"
-            f"• **Material Type:** PET (#1) and HDPE (#2) rigid plastics (water bottles, milk jugs).\n"
-            f"• **Disposal Steps{loc_suffix}:** Rinse out food/liquid residue thoroughly. Flatten the bottle to save space and place in the **Blue Dry Recyclables Bin**.\n"
-            f"• **Landfill Degradation:** Takes up to **450 years** to decompose in landfills!\n"
-            f"• **Carbon Savings:** Recycling 1 ton of plastic saves ~1.5 tons of CO₂ and 5,774 kWh of electricity.\n\n"
-            f"💡 **Pro Tip:** Keep caps attached if accepted locally, but avoid putting thin plastic film or plastic bags into curbside bins as they jam sorting machinery."
+            f"🔋 **Hazardous Battery & Lithium Cell Recommendation ({loc})**\n\n"
+            f"• **Category:** Hazardous Chemical Waste (Lithium-ion, Alkaline AA/AAA, NiMH, Lead-acid).\n"
+            f"• **Hazard Rating:** HIGH ⚠️ Never throw batteries into regular trash or curbside recycling! Crushed batteries trigger fires in waste collection trucks and leach toxic heavy metals (lead, cadmium, mercury) into groundwater.\n"
+            f"• **Recommended Action{loc_suffix}:** Tape battery terminals with electrical tape and bring them to an authorized **E-Waste & Battery Drop-Off Point** (see our interactive GIS Waste Map).\n"
+            f"• **Decomposition Time:** 100+ years with toxic heavy metal leaching.\n"
+            f"• **Resource Recovery:** 95% of cobalt, lithium, and nickel can be recycled into new batteries!"
         )
         return reply, False, None
 
-    if any(k in msg_clean for k in ["glass", "jar", "wine", "mirror", "window"]):
+    # ELECTRONICS & E-WASTE
+    if any(k in msg_clean for k in ["electronic", "electronics", "e-waste", "phone", "laptop", "cable", "computer", "tv", "circuit", "charger", "device"]):
         reply = (
-            f"🍾 **Glass Container Recycling Guide ({loc})**\n\n"
-            f"• **Material Type:** Container Glass (Soda-lime glass).\n"
-            f"• **Disposal Steps{loc_suffix}:** Rinse clean and remove lids. Place in the **Glass & Metal Stream** or nearby drop-off depot.\n"
-            f"• **Infinite Recyclability:** Glass is 100% infinitely recyclable without any loss in quality or purity!\n"
-            f"• **Landfill Degradation:** Glass takes over **1,000,000 years** to decompose naturally.\n\n"
-            f"⚠️ **Warning:** Do NOT mix ceramics, Pyrex, or window glass with bottle glass — they melt at higher temperatures and ruin recycled batches!"
+            f"💻 **E-Waste & Electronics Disposal Recommendation ({loc})**\n\n"
+            f"• **Category:** Electronic Scrap & Circuitry (Mobile phones, laptops, cables, PCBs, displays).\n"
+            f"• **Hazard & Value:** Contains valuable gold, copper, and silver alongside toxic lead and mercury.\n"
+            f"• **Recommended Action{loc_suffix}:** Factory reset personal data and hand over to an authorized **E-Waste Drop-Off Depot** or manufacturer take-back scheme.\n"
+            f"• **Decomposition Time:** Centuries (does not degrade naturally).\n"
+            f"• **Circular Impact:** E-waste recycling recovers precious metals with 80% lower energy than mining raw ore."
         )
         return reply, False, None
 
-    if any(k in msg_clean for k in ["metal", "can", "aluminum", "tin", "foil"]):
+    # GLASS MATERIAL
+    if any(k in msg_clean for k in ["glass", "jar", "wine", "mirror", "window", "glassware", "soda-lime"]):
         reply = (
-            f"🥫 **Metal & Aluminum Recycling Guide ({loc})**\n\n"
-            f"• **Material Type:** Aluminum Soda Cans & Steel Food Tins.\n"
-            f"• **Disposal Steps{loc_suffix}:** Rinse clean and place in **Dry Recyclables Bin**.\n"
-            f"• **Energy Savings:** Recycling aluminum uses **95% less energy** than manufacturing from raw ore!\n"
-            f"• **Circular Loop:** An aluminum can is recycled and back on store shelves as a new product in as little as **60 days**.\n\n"
-            f"💡 **Pro Tip:** Clean aluminum foil can be rolled into a ball (size of a tennis ball) so automated sorters catch it easily."
+            f"🍾 **Glass Container Recommendation ({loc})**\n\n"
+            f"• **Category:** Container Glass (Soda-lime clear, green, and amber bottles & food jars).\n"
+            f"• **Recyclability:** 100% INFINITELY RECYCLABLE without any loss of quality or purity!\n"
+            f"• **Recommended Action{loc_suffix}:** Rinse out remaining liquid/food, remove plastic/metal caps, and place in the **Blue Dry Recyclables Bin** or glass depot.\n"
+            f"• **Decomposition Time:** 1,000,000+ years in landfills.\n"
+            f"⚠️ **Important Note:** Do NOT mix heat-resistant Pyrex, light bulbs, or window glass with bottle glass as they melt at different temperatures and ruin recycled batches."
         )
         return reply, False, None
 
-    if any(k in msg_clean for k in ["paper", "cardboard", "box", "newspaper", "pizza"]):
+    # METAL & ALUMINUM
+    if any(k in msg_clean for k in ["metal", "can", "aluminum", "tin", "foil", "steel", "scrap"]):
+        reply = (
+            f"🥫 **Metal & Aluminum Recommendation ({loc})**\n\n"
+            f"• **Category:** Recyclable Metals (Aluminum beverage cans, steel food tins, clean aluminum foil).\n"
+            f"• **Recyclability:** Highly recyclable; aluminum can be recycled infinitely.\n"
+            f"• **Recommended Action{loc_suffix}:** Rinse food residue clean, flatten cans to save bin space, and place in the **Dry Recyclables Bin**.\n"
+            f"• **Decomposition Time:** 50 to 200 years in landfills.\n"
+            f"• **Energy Savings:** Recycling aluminum uses **95% less energy** than producing new metal from bauxite ore!"
+        )
+        return reply, False, None
+
+    # PAPER & CARDBOARD
+    if any(k in msg_clean for k in ["paper", "cardboard", "box", "newspaper", "magazine", "carton", "pizza"]):
         is_pizza = "pizza" in msg_clean
         if is_pizza:
             reply = (
                 f"🍕 **Pizza Box Disposal & Composting Guide ({loc})**\n\n"
-                f"• **Grease Contamination:** Grease-stained cardboard **CANNOT** be recycled because oil prevents paper fibers from binding.\n"
-                f"• **Disposal Steps{loc_suffix}:** Tear off the clean top lid for **Cardboard Recycling**, and put the greasy bottom into **Organic Compost** or food waste!\n"
-                f"• **Decomposition Time:** Clean cardboard decomposes in 2-3 months in compost soil."
+                f"• **Grease Contamination Check:** Grease-stained cardboard **CANNOT** be recycled into clean paper because food oil breaks paper fiber bonds.\n"
+                f"• **Recommended Action{loc_suffix}:** Tear off the clean top lid for **Cardboard Recycling**, and place the greasy bottom into **Organic Compost** or general food waste!\n"
+                f"• **Decomposition Time:** 2-3 months in soil compost."
             )
         else:
             reply = (
-                f"📦 **Paper & Cardboard Recycling Guide ({loc})**\n\n"
-                f"• **Material Type:** Corrugated Cardboard & Mixed Paper.\n"
-                f"• **Disposal Steps{loc_suffix}:** Flatten boxes to save space and place in **Paper Recycling Bin**.\n"
-                f"• **Impact:** Recycling 1 ton of cardboard saves 17 trees, 7,000 gallons of water, and 4,000 kWh of electricity."
+                f"📦 **Paper & Cardboard Recommendation ({loc})**\n\n"
+                f"• **Category:** Corrugated Cardboard, Mixed Paper, Office Paper, Cartons.\n"
+                f"• **Recommended Action{loc_suffix}:** Flatten boxes, keep dry and free of oil, and place in **Paper Recycling Bin**.\n"
+                f"• **Decomposition Time:** 2 to 6 weeks when composted.\n"
+                f"• **Impact:** Recycling 1 ton of paper saves 17 trees, 7,000 gallons of water, and 4,000 kWh of energy."
             )
         return reply, False, None
 
-    if any(k in msg_clean for k in ["battery", "batteries", "lithium", "cell"]):
-        reply = (
-            f"🔋 **Hazardous Battery & Lithium Cell Safety Guide ({loc})**\n\n"
-            f"• **HAZARD WARNING:** Never throw batteries into regular trash or curbside bins! Lithium-ion batteries crush easily in collection trucks and cause dangerous fires.\n"
-            f"• **Disposal Steps{loc_suffix}:** Bring to an authorized **E-Waste & Battery Drop-Off Point** (check our GIS Map layer for points in {loc}).\n"
-            f"• **Resource Recovery:** 95% of battery materials (cobalt, lithium, nickel) are recoverable for new battery manufacturing!"
-        )
-        return reply, False, None
-
-    if any(k in msg_clean for k in ["electronic", "e-waste", "phone", "laptop", "cable", "computer", "tv"]):
-        reply = (
-            f"💻 **E-Waste & Electronics Disposal Guide ({loc})**\n\n"
-            f"• **Material Type:** Electronic Scrap (Circuit boards, wiring, display panels).\n"
-            f"• **Disposal Steps{loc_suffix}:** Electronics contain toxic lead, mercury, and cadmium alongside gold and copper. Hand over to authorized e-waste recyclers.\n"
-            f"• **Data Safety:** Remember to back up and factory-reset your device before recycling!"
-        )
-        return reply, False, None
-
-    if any(k in msg_clean for k in ["compost", "food", "organic", "scraps", "peel", "banana"]):
+    # ORGANIC FOOD WASTE & COMPOST
+    if any(k in msg_clean for k in ["compost", "food", "organic", "scraps", "peel", "banana", "apple", "vegetable"]):
         reply = (
             f"🌱 **Organic Food Waste & Composting Guide ({loc})**\n\n"
-            f"• **Classification:** Organic Food Scraps & Green Waste.\n"
-            f"• **Disposal Steps{loc_suffix}:** Place in your **Green Organic Bin** or backyard compost bin (includes fruit peels, coffee grounds, eggshells, vegetable ends).\n"
-            f"• **Methane Reduction:** Composting diverts food scraps from landfills where they would otherwise release harmful methane gas!"
+            f"• **Category:** Biodegradable Organic Waste (Fruit peels, vegetable ends, eggshells, coffee grounds, food scraps).\n"
+            f"• **Recommended Action{loc_suffix}:** Place in your **Green Organics Bin** or home compost pit to create nutrient-rich soil.\n"
+            f"• **Methane Prevention:** Composting diverts organic matter from landfills where anaerobic decomposition produces harmful methane gas (CH₄).\n"
+            f"• **Decomposition Time:** 1 to 4 months in managed composting conditions."
+        )
+        return reply, False, None
+
+    # PLASTIC MATERIAL (Evaluated after specific materials or for plastic keywords)
+    if any(k in msg_clean for k in ["plastic", "polythene", "pvc", "pet", "styrofoam", "jug", "pouch", "wrapper"]) or (
+        any(k in msg_clean for k in ["bottle", "container", "cup", "bag"]) and not any(m in msg_clean for m in ["glass", "metal", "battery", "electronic", "paper", "cardboard", "food"])
+    ):
+        reply = (
+            f"🥤 **Plastic Waste & Recycling Recommendation ({loc})**\n\n"
+            f"• **Category:** Rigid & Soft Plastics (PET #1 water bottles, HDPE #2 milk jugs, PP #5 food tubs).\n"
+            f"• **Recommended Action{loc_suffix}:** Rinse clean of food/liquid, flatten to optimize space, and place in the **Blue Dry Recyclables Bin**.\n"
+            f"• **Decomposition Time:** 20 to 500 years in landfill environments.\n"
+            f"• **Carbon Savings:** Recycling 1 ton of plastic saves ~1.5 tons of CO₂ emissions.\n\n"
+            f"💡 **Pro Tip:** Keep plastic caps attached if accepted locally, but avoid putting thin grocery bags into curbside bins as they tangle sorting machinery."
         )
         return reply, False, None
 

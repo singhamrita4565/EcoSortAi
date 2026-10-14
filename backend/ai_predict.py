@@ -125,6 +125,30 @@ RECYCLING_RULES = {
         "decompose_time": "Centuries (toxic leaching)",
     },
 
+    "organic_waste": {
+        "action": "ORGANIC COMPOST",
+        "instruction":
+            "Place in green organic waste bin or backyard compost pit. "
+            "Keeps biodegradable food scraps out of methane-producing landfills.",
+        "reason":
+            "Organic food waste decomposes into nutrient-rich soil fertilizer when composted.",
+        "recyclable": True,
+        "reusable": True,
+        "decompose_time": "1–4 months (composted)",
+    },
+
+    "hazardous_waste": {
+        "action": "SPECIAL HAZARDOUS DISPOSAL",
+        "instruction":
+            "Hand over to municipal chemical waste depot. "
+            "Do NOT dump in regular trash or drain.",
+        "reason":
+            "Contains toxic compounds requiring specialized chemical containment.",
+        "recyclable": False,
+        "reusable": False,
+        "decompose_time": "Centuries (toxic threat)",
+    },
+
     "unknown": {
         "action": "GENERAL WASTE",
         "instruction":

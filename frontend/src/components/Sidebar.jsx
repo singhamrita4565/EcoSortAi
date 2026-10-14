@@ -13,11 +13,6 @@ function Sidebar() {
       icon: "📷",
     },
     {
-      name: "History",
-      path: "/history",
-      icon: "🕘",
-    },
-    {
       name: "Waste Map",
       path: "/map",
       icon: "🗺️",
@@ -31,6 +26,11 @@ function Sidebar() {
       name: "AI Chatbot",
       path: "/chatbot",
       icon: "🤖",
+    },
+    {
+      name: "History",
+      path: "/history",
+      icon: "🕘",
     },
   ];
 
